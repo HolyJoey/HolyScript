@@ -22,6 +22,7 @@ local info_root = menu.list(util_root, 'Gather Info', {}, '')
 local chat_root = menu.list(util_root, 'Chat Commands', {}, '')
 local retarded_root = menu.list(self_root, 'Retarded Features', {}, '')
 local mystuff_root = menu.list(self_root, 'Find My Stuff', {}, '')
+-- local experimental_root = menu.list(self_root, 'Experimental Features', {}, '')
 
 -- Stuff i use with the info overlay
 local function HostName()
@@ -66,7 +67,7 @@ menu.toggle(info_root, "Show Joins With Language", { "ShowJoinLang" }, "Will sho
 end)
 
 -- Chat command stuff
-menu.toggle(chat_root, "TP vehicle to you", { "!tpme" }, "Allows them to tp their vehicle to you", function(on)
+menu.toggle(chat_root, "TP vehicle to you", { "!bringme" }, "Allows them to tp their vehicle to you", function(on)
     enableLookAtChat = on
 end)
 chat.on_message(function(pid, unused, content, tc)
@@ -74,8 +75,8 @@ chat.on_message(function(pid, unused, content, tc)
         return
     end
     local lowerContent = content:lower()
-    if lowerContent:find('!tpme') and not lowerContent:find('> ') then
-        chat.send_message('> ' .. players.get_name(pid) .. ' issued !tpme', tc, true, true)
+    if lowerContent:find('!bringme') and not lowerContent:find('> ') then
+        chat.send_message('> ' .. players.get_name(pid) .. ' issued !bringme', tc, true, true)
         menu.trigger_commands("summon" .. players.get_name(pid))
     end
 end)
@@ -168,7 +169,7 @@ end)
 
 players.on_join(generateFeatures)
 players.on_join(function(pid)
-    util.yield(100)
+    util.yield(25000)
     while util.is_session_transition_active() do util.yield(100) end
     while not NETWORK.NETWORK_IS_PLAYER_ACTIVE(pid) do util.yield(100) end
 end)
