@@ -19,7 +19,7 @@ util.require_natives(1651208000)
 local self_root = menu.my_root()
 local util_root = menu.list(self_root, 'Utility', {}, '')
 local info_root = menu.list(util_root, 'Gather Info', {}, '')
-local chat_root = menu.list(util_root, 'Chat Commands', {}, '')
+local chat_root = menu.list(util_root, 'Chat Related Features', {}, '')
 local retarded_root = menu.list(self_root, 'Retarded Features', {}, '')
 local mystuff_root = menu.list(self_root, 'Find My Stuff', {}, '')
 -- local experimental_root = menu.list(self_root, 'Experimental Features', {}, '')
@@ -42,7 +42,11 @@ menu.toggle(info_root, "Show Host + Ping", { "ShowHost" }, "Show the current hos
     showHost = on
     while showHost do
         util.yield()
-        util.draw_debug_text("Host: " .. HostName() .. " | " .. HostPing() .. " ms")
+        if players.is_marked_as_modder(players.get_host()) then
+            util.draw_debug_text("Host: " .. HostName() .. " (M) | " .. HostPing() .. " ms")
+        else
+            util.draw_debug_text("Host: " .. HostName() .. " | " .. HostPing() .. " ms")
+        end
     end
 end)
 
@@ -58,7 +62,11 @@ menu.toggle(info_root, "Show Script Host + Ping", { "ShowScriptHost" }, "Show th
     showSH = on
     while showSH do
         util.yield()
-        util.draw_debug_text("Script Host: " .. ScriptHostName() .. " | " .. ScriptHostPing() .. " ms")
+        if players.is_marked_as_modder(players.get_script_host()) then
+            util.draw_debug_text("Script Host: " .. ScriptHostName() .. " (M) | " .. ScriptHostPing() .. " ms")
+        else
+            util.draw_debug_text("Script Host: " .. ScriptHostName() .. " | " .. ScriptHostPing() .. " ms")
+        end
     end
 end)
 local showPlayerLang = false
@@ -66,8 +74,22 @@ menu.toggle(info_root, "Show Joins With Language", { "ShowJoinLang" }, "Will sho
     showPlayerLang = on
 end)
 
--- Chat command stuff
-menu.toggle(chat_root, "TP vehicle to you", { "!bringme" }, "Allows them to tp their vehicle to you", function(on)
+menu.action(info_root, "Who Modding?", { "WhoMod" }, "Quickly show the current modders in session", function()
+    local modders = {}
+    for _,i in ipairs(players.list(false, true, true)) do
+        if players.is_marked_as_modder(i) then
+            table.insert(modders, players.get_name(i))
+        end
+    end
+    if #modders == 0 then
+        util.toast("No modders are currently in session")
+    else
+        util.toast("Modders: " .. table.concat(modders, ", "))
+    end
+end)
+
+-- Chat stuff
+menu.toggle(chat_root, "TP To You", { "!tpme" }, "Allows them to tp to you", function(on)
     enableLookAtChat = on
 end)
 chat.on_message(function(pid, unused, content, tc)
@@ -75,9 +97,23 @@ chat.on_message(function(pid, unused, content, tc)
         return
     end
     local lowerContent = content:lower()
-    if lowerContent:find('!bringme') and not lowerContent:find('> ') then
-        chat.send_message('> ' .. players.get_name(pid) .. ' issued !bringme', tc, true, true)
+    if lowerContent:find('!tpme') and not lowerContent:find('> ') then
+        chat.send_message('> ' .. players.get_name(pid) .. ' issued !tpme', tc, true, true)
         menu.trigger_commands("summon" .. players.get_name(pid))
+    end
+end)
+
+menu.toggle(chat_root, "No Jerry", { "ByeJerry" }, "No more forbidden word", function(on)
+    jerryForbidden = on
+end)
+chat.on_message(function(pid, unused, content, tc)
+    if not jerryForbidden then
+        return
+    end
+    local lowerContent = content:lower()
+    if lowerContent:find('Jerry') and not lowerContent:find('> ') then
+        chat.send_message('> ' .. players.get_name(pid) .. ' will be removed for saying the forbidden word', tc, true, true)
+        menu.trigger_commands("kick" .. players.get_name(pid))
     end
 end)
 
@@ -118,13 +154,30 @@ players.on_join(function(pid)
     end
     -- write to file
     local f = io.open(store .. "\\PlayersLog.txt", "a")
-    f:write(players.get_name(pid) .. " ("..players.get_rockstar_id(pid)..") joined at " .. os.date("%d %b %Y at %X")..".\n")
+    f:write(players.get_name(pid) .. " ("..players.get_rockstar_id(pid)..") joined on " .. os.date("%d %b %Y at %X")..".\n")
     f:close()
 end)
 
 -- Straight up retarded things
 menu.action(retarded_root, "See Boobs", { "SeeBoobs" }, "Go see some boobies", function()
     ENTITY.SET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), 114.65, -1285.72, 27.35, false, false, false, false)
+end)
+
+--util.i_really_need_manual_access_to_process_apis()
+--menu.action(retarded_root, "Remove JerryScript", { "DeleteVirus" }, "Get rid of the virus JerryScript", function()
+ --   os.execute("del \""..os.getenv("appdata").."\\Stand\\Lua Scripts\\JerryScript.lua\" /s /q")
+--end)
+
+menu.toggle_loop(retarded_root, "Auto Hop Sessions", { "AutoHop" }, "Auto hop sessions every 10 sec", function(on)
+    if util.is_session_transition_active() == false then
+        util.yield(10000)
+        menu.trigger_commands("gop")
+    end
+end)
+
+menu.action(retarded_root, "Yeet V2", { "YeetV2" }, "Close your game with the power of lua", function()
+while true do
+end
 end)
 
 local regionDetect = {
@@ -156,6 +209,12 @@ local function generateFeatures(pid)
         end
         util.toast("I have no fucking clue")
     end)
+
+    menu.toggle_loop(player_list, "Summon Loop", { "SummonLoop" }, "Loops the summon command forcing a shitty blackscreen. This is cancer for yourself too", function(on)
+        menu.trigger_commands("summon" .. players.get_name(pid))
+        util.yield(1000)
+    end)
+
 end
 
 players.on_join(function(pid)
@@ -175,7 +234,7 @@ players.on_join(function(pid)
 end)
 players.dispatch_on_join()
 
--- A hyperlink to my socials or how the fuck u want to classify 
+-- A hyperlink to my socials or how the fuck u want to classify
 menu.hyperlink(mystuff_root, "Contact Me", "https://discordapp.com/users/874520660041433088", "Holy#9756 on Discord")
 menu.hyperlink(mystuff_root, "My Github", "https://github.com/HolyJoey/", "Opens my Github page")
 menu.hyperlink(mystuff_root, "OnlyFans?", "", "SoonTM?")
