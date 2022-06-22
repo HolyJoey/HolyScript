@@ -163,11 +163,6 @@ menu.action(retarded_root, "See Boobs", { "SeeBoobs" }, "Go see some boobies", f
     ENTITY.SET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), 114.65, -1285.72, 27.35, false, false, false, false)
 end)
 
---util.i_really_need_manual_access_to_process_apis()
---menu.action(retarded_root, "Remove JerryScript", { "DeleteVirus" }, "Get rid of the virus JerryScript", function()
- --   os.execute("del \""..os.getenv("appdata").."\\Stand\\Lua Scripts\\JerryScript.lua\" /s /q")
---end)
-
 menu.toggle_loop(retarded_root, "Auto Hop Sessions", { "AutoHop" }, "Auto hop sessions every 10 sec", function(on)
     if util.is_session_transition_active() == false then
         util.yield(10000)
