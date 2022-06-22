@@ -18,4 +18,4 @@ Features:
 - Auto Hop Sessions (tbh idk why)
 - No more forbidden word ("Jerry")
 
-- (Remove JerryScript if comments removed)
+- (Remove JerryScript if not made as a comment)
