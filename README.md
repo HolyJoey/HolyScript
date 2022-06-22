@@ -17,5 +17,3 @@ Features:
 - Yeet V2
 - Auto Hop Sessions (tbh idk why)
 - No more forbidden word ("Jerry")
-
-- (Remove JerryScript if not made as a comment)
