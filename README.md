@@ -8,6 +8,7 @@ Features:
 - Showing the current script host + their ping
 - Showing joins with language 
 - Grab player language
+- Taze Hell
 - Logging joins in a seperate file
 - Chat command allowing people to tp to you
 - Escape current interior
