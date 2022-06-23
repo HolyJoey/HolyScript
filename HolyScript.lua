@@ -210,6 +210,20 @@ local function generateFeatures(pid)
         util.yield(1000)
     end)
 
+    --Thanks sapphire for making this toxicity
+    local taze = false
+    menu.toggle(player_list, "Taze Hell", {"TazeHell"}, "Give them hell by tazing them whilst healing at the same time.", function(toggle)
+    taze = toggle
+    local autoheal = menu.ref_by_rel_path(menu.player_root(pid), "Friendly>Auto Heal")
+    menu.trigger_command(autoheal, "on")
+    while taze do
+        local coords = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
+        MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(coords.x, coords.y, coords.z + 0.5, coords.x, coords.y, coords.z, 0, true, util.joaat("WEAPON_STUNGUN_MP"), PLAYER.PLAYER_PED_ID(), false, true, 0)
+        util.yield_once()
+    end
+    menu.trigger_command(autoheal, "off")
+end)
+
 end
 
 players.on_join(function(pid)
