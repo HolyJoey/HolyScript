@@ -9,6 +9,11 @@ Features:
 - Showing joins with language 
 - Grab player language
 - Taze Hell
+- Bouncy Castle Simulator
+- Bring Hiroshima
+- Bounty Loop Player
+- Bounty Loop Session
+- Summon Loop
 - Logging joins in a seperate file
 - Chat command allowing people to tp to you
 - Escape current interior
