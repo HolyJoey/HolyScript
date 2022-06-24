@@ -25,8 +25,13 @@ local mystuff_root = menu.list(self_root, 'Find My Stuff', {}, '')
 -- local experimental_root = menu.list(self_root, 'Experimental Features', {}, '')
 
 -- Stuff i use with the info overlay
+
+local function GetHost()
+    return util.is_session_started() and players.get_host() or players.user()
+end
+
 local function HostName()
-    return players.get_name(players.get_host())
+    return players.get_name(GetHost())
 end
 
 -- This allows to round a value
@@ -35,7 +40,7 @@ local function round(num)
 end
 
 local function HostPing()
-    return round(NETWORK._NETWORK_GET_AVERAGE_LATENCY_FOR_PLAYER(players.get_host()))
+    return round(NETWORK._NETWORK_GET_AVERAGE_LATENCY_FOR_PLAYER(GetHost))
 end
 local showHost = false
 menu.toggle(info_root, "Show Host + Ping", { "ShowHost" }, "Show the current host and their ping to you", function(on)
@@ -50,12 +55,16 @@ menu.toggle(info_root, "Show Host + Ping", { "ShowHost" }, "Show the current hos
     end
 end)
 
+local function GetScriptHost()
+    return util.is_session_started() and players.get_script_host() or players.user()
+end
+
 local function ScriptHostName()
-    return players.get_name(players.get_script_host())
+    return players.get_name(GetScriptHost())
 end
 
 local function ScriptHostPing()
-    return round(NETWORK._NETWORK_GET_AVERAGE_LATENCY_FOR_PLAYER(players.get_script_host()))
+    return round(NETWORK._NETWORK_GET_AVERAGE_LATENCY_FOR_PLAYER(GetScriptHost()))
 end
 local showSH = false
 menu.toggle(info_root, "Show Script Host + Ping", { "ShowScriptHost" }, "Show the current script host and their ping to you", function(on)
@@ -93,13 +102,12 @@ menu.toggle(chat_root, "TP To You", { "!tpme" }, "Allows them to tp to you", fun
     enableLookAtChat = on
 end)
 chat.on_message(function(pid, unused, content, tc)
-    if not enableLookAtChat then
-        return
-    end
-    local lowerContent = content:lower()
-    if lowerContent:find('!tpme') and not lowerContent:find('> ') then
-        chat.send_message('> ' .. players.get_name(pid) .. ' issued !tpme', tc, true, true)
-        menu.trigger_commands("summon" .. players.get_name(pid))
+    if enableLookAtChat and pid ~= players.user() then
+        local lowerContent = content:lower()
+        if lowerContent:find('!tpme') and not lowerContent:find('> ') then
+            chat.send_message('> ' .. players.get_name(pid) .. ' issued !tpme', tc, true, true)
+            menu.trigger_commands("summon" .. players.get_name(pid))
+        end
     end
 end)
 
@@ -120,7 +128,14 @@ end)
 -- Utility here
 menu.action(util_root, "Escape Interior", { "Escape" }, "TP's upwards to get outside interior", function()
     local pos = ENTITY.GET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID())
-    ENTITY.SET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), pos.x, pos.y, 300)
+    local accurate
+    local counter = 0
+    repeat
+        accurate, pos.z = util.get_ground_z(pos.x, pos.y)
+        counter = counter + 1
+        util.yield_once()
+    until accurate or counter >= 2000
+    ENTITY.SET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), pos.x, pos.y, pos.z, false, false, false, false)
 end)
 
 local AlwaysAllGuns = false
@@ -161,18 +176,26 @@ end)
 -- Straight up retarded things
 menu.action(retarded_root, "See Boobs", { "SeeBoobs" }, "Go see some boobies", function()
     ENTITY.SET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), 114.65, -1285.72, 27.35, false, false, false, false)
+    util.yield(100)
+    --0x45
+end)
+
+menu.toggle_loop(retarded_root, "Bounty Loop Session", { "BountyLoopSession" }, "Loop a bounty on every player in session", function(on)
+    while true do
+        menu.trigger_commands("bountyall 10000")
+        util.yield(5000)
+    end
 end)
 
 menu.toggle_loop(retarded_root, "Auto Hop Sessions", { "AutoHop" }, "Auto hop sessions every 10 sec", function(on)
-    if util.is_session_transition_active() == false then
+    if not util.is_session_transition_active() then
         util.yield(10000)
         menu.trigger_commands("gop")
     end
 end)
 
 menu.action(retarded_root, "Yeet V2", { "YeetV2" }, "Close your game with the power of lua", function()
-while true do
-end
+    while true do end
 end)
 
 local regionDetect = {
@@ -195,6 +218,8 @@ local regionDetect = {
 local function generateFeatures(pid)
     menu.divider(menu.player_root(pid), "HolyScript")
     local player_list = menu.list(menu.player_root(pid), "HolyScript")
+    local toxic_list = menu.list(player_list, "Toxic Shit")
+
 
     menu.action(player_list, "Get their language of their game", { "GameLang" }, "Will tell the language their game is in", function()
         local language = players.get_language(pid)
@@ -205,24 +230,60 @@ local function generateFeatures(pid)
         util.toast("I have no fucking clue")
     end)
 
-    menu.toggle_loop(player_list, "Summon Loop", { "SummonLoop" }, "Loops the summon command forcing a shitty blackscreen. This is cancer for yourself too", function(on)
+    local bountyLoop = false
+    menu.toggle(player_list, "Bounty Loop", { "BountyPlayer" }, "Loops a bounty on specific player", function(on)
+        bountyLoop = on
+        local bounty = menu.ref_by_rel_path(menu.player_root(pid), "Trolling>Place Bounty")
+        menu.trigger_command(bounty, "10000")
+        while bountyLoop do
+            if memory.read_int(memory.read_long(entities.handle_to_pointer(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)) + 0x10C8) + 0x01D8) == 1 then
+                menu.trigger_command(bounty, "10000")
+            end
+            util.yield_once()
+        end
+    end)
+
+    menu.toggle_loop(toxic_list, "Summon Loop", { "SummonLoop" }, "Loops the summon command forcing a shitty blackscreen. This is cancer for yourself too", function(on)
         menu.trigger_commands("summon" .. players.get_name(pid))
         util.yield(1000)
     end)
 
     --Thanks sapphire for making this toxicity
     local taze = false
-    menu.toggle(player_list, "Taze Hell", {"TazeHell"}, "Give them hell by tazing them whilst healing at the same time.", function(toggle)
-    taze = toggle
-    local autoheal = menu.ref_by_rel_path(menu.player_root(pid), "Friendly>Auto Heal")
-    menu.trigger_command(autoheal, "on")
-    while taze do
-        local coords = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
-        MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(coords.x, coords.y, coords.z + 0.5, coords.x, coords.y, coords.z, 0, true, util.joaat("WEAPON_STUNGUN_MP"), PLAYER.PLAYER_PED_ID(), false, true, 0)
-        util.yield_once()
-    end
-    menu.trigger_command(autoheal, "off")
-end)
+    menu.toggle(toxic_list, "Taze Hell", {"TazeHell"}, "Give them hell by tazing them whilst healing at the same time.", function(toggle)
+        taze = toggle
+        local autoheal = menu.ref_by_rel_path(menu.player_root(pid), "Friendly>Auto Heal")
+        menu.trigger_command(autoheal, "on")
+        while taze do
+            local coords = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
+            MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(coords.x, coords.y, coords.z + 0.5, coords.x, coords.y, coords.z, 0, true, util.joaat("WEAPON_STUNGUN_MP"), PLAYER.PLAYER_PED_ID(), false, true, 0)
+            util.yield_once()
+        end
+        menu.trigger_command(autoheal, "off")
+    end)
+
+    local atomize = false
+    menu.toggle(toxic_list, "Bouncy Castle Simulator", {"BouncySimulator"}, "Make their ped act like its a bouncy castle.", function(toggle)
+        atomize = toggle
+        local autoheal = menu.ref_by_rel_path(menu.player_root(pid), "Friendly>Auto Heal")
+        menu.trigger_command(autoheal, "on")
+        while atomize do
+            local coords = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
+            MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(coords.x, coords.y, coords.z + 0.5, coords.x, coords.y, coords.z, 0, true, util.joaat("weapon_raypistol"), PLAYER.PLAYER_PED_ID(), false, true, 0)
+            util.yield(1000)
+        end
+        menu.trigger_command(autoheal, "off")
+    end)
+
+    local nuke = false
+    menu.toggle(toxic_list, "Bring Hiroshima", {"Hiroshima"}, "Nuke their ass like its Hiroshima.", function(toggle)
+        nuke = toggle
+        while nuke do
+            local coords = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
+            FIRE.ADD_EXPLOSION(coords.x, coords.y, coords.z, 29, 1.0, true, false, 1.0, false)
+            util.yield()
+        end
+    end)
 
 end
 
