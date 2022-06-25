@@ -176,8 +176,8 @@ end)
 -- Straight up retarded things
 menu.action(retarded_root, "See Boobs", { "SeeBoobs" }, "Go see some boobies", function()
     ENTITY.SET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), 114.65, -1285.72, 27.35, false, false, false, false)
-    util.yield(100)
-    --0x45
+    util.yield(1000)
+    PAD._SET_CONTROL_NORMAL(0, 51, 1.0)
 end)
 
 menu.toggle_loop(retarded_root, "Bounty Loop Session", { "BountyLoopSession" }, "Loop a bounty on every player in session", function(on)
@@ -217,11 +217,11 @@ local regionDetect = {
     --Player features here
 local function generateFeatures(pid)
     menu.divider(menu.player_root(pid), "HolyScript")
-    local player_list = menu.list(menu.player_root(pid), "HolyScript")
-    local toxic_list = menu.list(player_list, "Toxic Shit")
+    local retarded_list = menu.list(menu.player_root(pid), "Retarded")
+    local toxic_list = menu.list(menu.player_root(pid), "Toxic")
 
 
-    menu.action(player_list, "Get their language of their game", { "GameLang" }, "Will tell the language their game is in", function()
+    menu.action(retarded_list, "Get their language of their game", { "GameLang" }, "Will tell the language their game is in", function()
         local language = players.get_language(pid)
         if regionDetect[language] then
             util.toast("Their game is in ".. regionDetect[language].lang)
@@ -231,7 +231,7 @@ local function generateFeatures(pid)
     end)
 
     local bountyLoop = false
-    menu.toggle(player_list, "Bounty Loop", { "BountyPlayer" }, "Loops a bounty on specific player", function(on)
+    menu.toggle(retarded_list, "Bounty Loop", { "BountyPlayer" }, "Loops a bounty on specific player", function(on)
         bountyLoop = on
         local bounty = menu.ref_by_rel_path(menu.player_root(pid), "Trolling>Place Bounty")
         menu.trigger_command(bounty, "10000")
