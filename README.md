@@ -13,8 +13,7 @@ Features:
 - Bring Hiroshima
 - Bounty Loop Player
 - Bounty Loop Session
-- Summon Loop
-- Logging joins in a seperate file
+- Logging player joins with info in a seperate file
 - Chat command allowing people to tp to you
 - Escape current interior
 - Always have all guns in every session
