@@ -13,7 +13,7 @@ Ren#5219
 util.toast("Please uninstall JerryScript due to it containing a virus!")
 
 -- require latest natives
-util.require_natives(1651208000)
+util.require_natives(1660775568)
 
 -- All parents are created here
 local self_root = menu.my_root()
@@ -78,6 +78,7 @@ menu.toggle(info_root, "Show Script Host + Ping", { "ShowScriptHost" }, "Show th
         end
     end
 end)
+
 local showPlayerLang = false
 menu.toggle(info_root, "Show Joins With Language", { "ShowJoinLang" }, "Will show you who joined with their game language", function(on)
     showPlayerLang = on
@@ -169,7 +170,16 @@ players.on_join(function(pid)
     end
     -- write to file
     local f = io.open(store .. "\\PlayersLog.txt", "a")
-    f:write(players.get_name(pid) .. " ("..players.get_rockstar_id(pid)..") joined on " .. os.date("%d %b %Y at %X")..".\n")
+    function dec_to_ipv4(ip)
+        return string.format(
+            "%i.%i.%i.%i",
+            ip >> 24 & 0xFF,
+            ip >> 16 & 0xFF,
+            ip >> 8  & 0xFF,
+            ip 		 & 0xFF
+        )
+    end
+    f:write(players.get_name(pid) .. " ("..players.get_rockstar_id(pid)..") joined on " .. os.date("%d %b %Y at %X") .. " with IP: " .. dec_to_ipv4(players.get_connect_ip(pid)) ..".\n")
     f:close()
 end)
 
@@ -195,7 +205,7 @@ menu.toggle_loop(retarded_root, "Auto Hop Sessions", { "AutoHop" }, "Auto hop se
 end)
 
 menu.action(retarded_root, "Yeet V2", { "YeetV2" }, "Close your game with the power of lua", function()
-    while true do end
+    ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0, 0, 0, 0, 0, 0, 0, false, false, false, false, false)
 end)
 
 local regionDetect = {
@@ -243,12 +253,7 @@ local function generateFeatures(pid)
         end
     end)
 
-    menu.toggle_loop(toxic_list, "Summon Loop", { "SummonLoop" }, "Loops the summon command forcing a shitty blackscreen. This is cancer for yourself too", function(on)
-        menu.trigger_commands("summon" .. players.get_name(pid))
-        util.yield(1000)
-    end)
-
-    --Thanks sapphire for making this toxicity
+    --Thanks Sapphire for helping to make this toxicity
     local taze = false
     menu.toggle(toxic_list, "Taze Hell", {"TazeHell"}, "Give them hell by tazing them whilst healing at the same time.", function(toggle)
         taze = toggle
@@ -284,7 +289,6 @@ local function generateFeatures(pid)
             util.yield()
         end
     end)
-
 end
 
 players.on_join(function(pid)
