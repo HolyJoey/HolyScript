@@ -1,5 +1,5 @@
 --[[
-Made by Holy#9756
+Made by Holy#6599
 I made this lua for learning and understanding lua myself. Some features are more usefull then the other
 Those who helped me out:
 Sapphire#1053 (always responds to my shitty questions <3)
